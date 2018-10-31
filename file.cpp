@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <gsl/gsl_statistics_double.h>
 #include <gsl/gsl_matrix_double.h>
-// #include "covar.h"
+#include "covar.h"
 
 void print_mat(gsl_matrix* C)
 {
@@ -73,32 +73,36 @@ int main()
     //                       {5,5,5,5,5,5},
     //                       {6,6,6,6,6,6}};
     
-    gsl_vector_view a, b;
+    covar my_covar;
+    my_covar.insert(dataA[0]);
+    my_covar.print_dp();
 
-    gsl_matrix *A, *C;
-    A = gsl_matrix_alloc(rsize, csize);
-    C = gsl_matrix_alloc(csize, csize);
+    // gsl_vector_view a, b;
 
-    for ( i = 0; i < rsize; i++)
-        for ( j = 0; j < csize; j++) 
-            gsl_matrix_set (A, i, j, dataA[i][j]);
+    // gsl_matrix *A, *C;
+    // A = gsl_matrix_alloc(rsize, csize);
+    // C = gsl_matrix_alloc(csize, csize);
 
-    print_mat(A);
+    // for ( i = 0; i < rsize; i++)
+    //     for ( j = 0; j < csize; j++) 
+    //         gsl_matrix_set (A, i, j, dataA[i][j]);
 
-    for (i = 0; i < A->size2; i++) {
-        for (j = 0; j < A->size2; j++) {
-          a = gsl_matrix_column (A, i);
-          b = gsl_matrix_column (A, j);
-          double cov = gsl_stats_covariance(a.vector.data, 
-                                            a.vector.stride,
-                                            b.vector.data, 
-                                            b.vector.stride, 
-                                            rsize);
-          gsl_matrix_set (C, i, j, cov);
-        }
-      }
+    // print_mat(A);
 
-    print_mat(C);
+    // for (i = 0; i < A->size2; i++) {
+    //     for (j = 0; j < A->size2; j++) {
+    //       a = gsl_matrix_column (A, i);
+    //       b = gsl_matrix_column (A, j);
+    //       double cov = gsl_stats_covariance(a.vector.data, 
+    //                                         a.vector.stride,
+    //                                         b.vector.data, 
+    //                                         b.vector.stride, 
+    //                                         rsize);
+    //       gsl_matrix_set (C, i, j, cov);
+    //     }
+    //   }
+
+    // print_mat(C);
 
     return 0;
 }

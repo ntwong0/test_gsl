@@ -26,24 +26,34 @@
  *     element of the matrix
  */
 
-struct odom_struct
-{
-    double x;
-    double y; 
-    double z; 
-    double yaw;
-    double pitch;
-    double roll;
-};
+// the covariance matrix of our odometry topic tracks six variables
+#define ODOM_COVAR_MAT_VARSIZE 6
+
+// Since we're traversing through the data points using a loop, maybe it'd 
+// be better to use an array of doubles rather than a struct
+// struct odom_struct
+// {
+//     double x;
+//     double y; 
+//     double z; 
+//     double yaw;
+//     double pitch;
+//     double roll;
+// };
 
 class covar
 {
     private:
         gsl_matrix *covar_mat;
-        std::vector<odom_struct> *data_points;
+        std::vector<double*> *data_points;
     
     public:
-        covar();
+        covar()
+        {
+            data_points = new std::vector<double*>;
+            covar_mat = gsl_matrix_alloc(ODOM_COVAR_MAT_VARSIZE, 
+                                         ODOM_COVAR_MAT_VARSIZE);
+        }
         
         ~covar()
         {
@@ -52,20 +62,85 @@ class covar
             delete data_points;
             data_points = 0;
         }
+
+        // We expect the input to be a double array with six elements
+        bool insert(double* data_point)
+        {
+            // double * temp = new double[6];
+            data_points->push_back(data_point);
+            return true;
+        }
+
+        void print_dp()
+        {
+            for (auto i = 0; i < data_points->size(); i++)
+            {
+                printf("%i: %f %f %f %f %f %f\n",
+                            i,
+                            (*data_points)[i][0],
+                            (*data_points)[i][1],
+                            (*data_points)[i][2],
+                            (*data_points)[i][3],
+                            (*data_points)[i][4],
+                            (*data_points)[i][5]);
+            }
+        }
         
-        print_mat()
+        void print_mat()
         {
             for (auto i = 0; i < covar_mat->size1; i++)
             {
                 printf("\n");
                 for (auto j = 0; j < covar_mat->size2; j++)
                 {
-                    printf("%f", covar_mat->data[C->size2*i+j]);
+                    printf("%f", covar_mat->data[covar_mat->size2*i+j]);
                     if(j < covar_mat->size2 - 1) printf(", ");
                 }
             }
             printf("\n");
         }
-}
+
+        bool generate_covar()
+        {
+            /* no point in generating a covariance matrix if we don't have 
+             * the data points to do so
+             */
+            int i, j;
+            int rsize = data_points->size();
+
+            if(rsize <= 1) return false; 
+
+            gsl_vector_view a, b;
+            gsl_matrix *A;
+            A = gsl_matrix_alloc(rsize, ODOM_COVAR_MAT_VARSIZE);
+            /* the covariance matrix should already be instantiated by the 
+             * class constructor
+             */
+            // covar_mat = gsl_matrix_alloc(ODOM_COVAR_MAT_VARSIZE, 
+            //                              ODOM_COVAR_MAT_VARSIZE);
+
+            // convert data_points into gsl_matrix A
+            for ( i = 0; i < rsize; i++)
+                for ( j = 0; j < ODOM_COVAR_MAT_VARSIZE; j++) 
+                    gsl_matrix_set (A, i, j, (*data_points)[i][j]);
+
+            // generate the var-covar values based on A
+            // insert these values into covar_mat
+            for (i = 0; i < A->size2; i++) {
+                for (j = 0; j < A->size2; j++) {
+                a = gsl_matrix_column (A, i);
+                b = gsl_matrix_column (A, j);
+                double cov = gsl_stats_covariance(a.vector.data, 
+                                                    a.vector.stride,
+                                                    b.vector.data, 
+                                                    b.vector.stride, 
+                                                    rsize);
+                gsl_matrix_set (covar_mat, i, j, cov);
+                }
+            }
+            
+            return true;
+        }
+};
 
 #endif // COVAR_H

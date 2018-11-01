@@ -5,15 +5,19 @@
 /** Main node entry point. */
 int main(int argc, char **argv)
 {
-  ros::init(argc, argv, "covar");
-  ros::NodeHandle nh;
+    ros::init(argc, argv, "covar");
+    ros::NodeHandle nh;
 
-  covar_ros covar_ros_obj;
+    covar_ros covar_ros_obj;
 
-  if (covar_ros_obj.setup(nh)) {
-    // initialization successful
-    ros::spin();
-  }
+    // specify topics
+    std::string input_odom = "/integrated_to_init";
+    std::string output_odom = "/loam_odom_with_covar";
 
-  return 0;
+    if (covar_ros_obj.setup(nh, input_odom, output_odom)) {
+        // initialization successful
+        ros::spin();
+    }
+
+    return 0;
 }

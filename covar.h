@@ -31,7 +31,7 @@
 
 // the covariance matrix of our odometry topic tracks six variables
 // as in, think of each data point as a six-dimensional point with the 
-// following axes: x, y, z, yaw, pitch, roll
+// following axes: x, y, z, roll, pitch, yaw
 #define ODOM_COVAR_MAT_VARSIZE 6
 
 // struct odom_struct
@@ -39,9 +39,9 @@
 //     double x;
 //     double y; 
 //     double z; 
-//     double yaw;
-//     double pitch;
 //     double roll;
+//     double pitch;
+//     double yaw;
 // };
 
 // Since we're traversing through the data points using a loop, maybe it'd 
@@ -49,7 +49,7 @@
 // double * data_point = new data_point[6];
 // We establish the convention here:
 // index: 0  1  2  3    4      5
-// axis:  x, y, z, yaw, pitch, roll
+// axis:  x, y, z, roll, pitch, yaw
 
 // However, from a maintainability perspective, relying on a double 
 // pointer is bad - there is no way of guaranteeing the fixed six-element 
@@ -115,6 +115,17 @@ class covar
                 }
             }
             printf("\n");
+        }
+
+        // \TODO: if covar_mat not available, deny get_mat
+        bool get_mat(double* array)
+        {
+            for(auto i = 0; i < 36; i++)
+                array[i] = gsl_matrix_get(covar_mat, 
+                                          i/6,  //row
+                                          i%6); //column
+            
+            return true;
         }
 
         bool generate_covar()

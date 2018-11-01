@@ -103,7 +103,7 @@ class covar_ros
                 pose_data_points_limit = 0;
                 pose_covar.generate_covar();
                 // pose_covar.get_mat(pose_covar_mat);
-                // pose_covar.get_mat(output_odom_msg.pose.covariance);
+                pose_covar.get_mat(&(output_odom_msg.pose.covariance));
                 pose_covar_available = true;
             }
 
@@ -130,7 +130,7 @@ class covar_ros
                 twist_data_points_limit = 0;
                 twist_covar.generate_covar();
                 // twist_covar.get_mat(twist_covar_mat);
-                // twist_covar.get_mat(output_odom_msg.twist.covariance);
+                twist_covar.get_mat(&(output_odom_msg.twist.covariance));
                 twist_covar_available = true;
             }
 

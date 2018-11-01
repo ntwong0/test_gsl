@@ -5,6 +5,8 @@
 #include <gsl/gsl_statistics_double.h>
 #include <gsl/gsl_matrix_double.h>
 #include <vector>
+#include <memory>
+#include <boost/array.hpp>
 
 // \TODO: trim excess comments 
 // \TODO: split this into an implementation file
@@ -123,12 +125,36 @@ class covar_lol
         }
 
         // \TODO: if covar_mat not available, deny get_mat
-        bool get_mat(double* array)
+        /*
+         * Error:
+         * no known conversion for argument 1 from 
+         * ‘geometry_msgs::PoseWithCovariance_<std::allocator<void> >
+         *               ::_covariance_type 
+         * {aka boost::array<double, 36ul>}’ to ‘double*’
+         */
+        // bool get_mat(double* array)
+        // bool get_mat(std::weak_ptr<double[]> array)
+        bool get_mat(boost::array<double, 36> *my_array)
         {
-            for(int i = 0; i < 36; i++)
-                array[i] = gsl_matrix_get(covar_mat, 
-                                          i/6,  //row
-                                          i%6); //column
+            for(int i = 0; 
+                    i < ODOM_COVAR_MAT_VARSIZE*ODOM_COVAR_MAT_VARSIZE; 
+                    i++)
+                (*my_array)[i] = gsl_matrix_get(covar_mat, 
+                                    i/ODOM_COVAR_MAT_VARSIZE,  //row
+                                    i%ODOM_COVAR_MAT_VARSIZE); //column
+            
+            return true;
+        }
+
+        // Overloading to retain usability with primitive double
+        bool get_mat(double* my_array)
+        {
+            for(int i = 0; 
+                    i < ODOM_COVAR_MAT_VARSIZE*ODOM_COVAR_MAT_VARSIZE; 
+                    i++)
+                my_array[i] = gsl_matrix_get(covar_mat, 
+                                    i/ODOM_COVAR_MAT_VARSIZE,  //row
+                                    i%ODOM_COVAR_MAT_VARSIZE); //column
             
             return true;
         }

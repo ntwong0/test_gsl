@@ -26,11 +26,13 @@ class covar_ros
         covar* twist_covar;
         bool pose_covar_available;
         bool twist_covar_available;
-        ROS subscriber for the odom topic;
-        ROS publisher for the odom topic;
+        ros::subscriber odom_sub;
+        ros::publisher odom_pub;
         ros::ServiceServer generate_pose_covar;
         ros::ServiceServer generate_twist_covar;
+        ros::ServiceServer generate_both_covar;
     public:
+        
 
 };
 

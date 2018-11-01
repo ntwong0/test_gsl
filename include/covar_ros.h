@@ -5,6 +5,7 @@
 
 #include <ros/ros.h>
 #include <nav_msgs/Odometry.h>
+#include <tf/transform_broadcaster.h>
 
 /* Continuing from covar.h, what we want to do here is
  * 1) Instantiate a covar object for each part of the odometry topic
@@ -29,15 +30,15 @@ class covar_ros
         double pose_covar_mat[36];
         double twist_covar_mat[36];
 
-        uint8 pose_data_points_count;
-        uint8 twist_data_points_count;
-        uint8 pose_data_points_limit;
-        uint8 twist_data_points_limit;
+        uint8_t pose_data_points_count;
+        uint8_t twist_data_points_count;
+        uint8_t pose_data_points_limit;
+        uint8_t twist_data_points_limit;
         bool pose_covar_available;
         bool twist_covar_available;
 
-        ros::subscriber sub_odom;
-        ros::publisher pub_odom;
+        ros::Subscriber sub_odom;
+        ros::Publisher pub_odom;
         ros::ServiceServer gen_pose_covar;
         ros::ServiceServer gen_twist_covar;
         ros::ServiceServer gen_both_covar;
@@ -91,18 +92,15 @@ class covar_ros
             if(twist_data_points_count++ < twist_data_points_limit)
             {
                 double * twist_data_point = new double[6];
-                twist_data_point[0] = 
-                                twist_data_point->twist.twist.linear.x;
-                twist_data_point[1] = 
-                                twist_data_point->twist.twist.linear.y;
-                twist_data_point[2] = 
-                                twist_data_point->twist.twist.linear.z;
+                twist_data_point[0] = input_odom_msg->twist.twist.linear.x;
+                twist_data_point[1] = input_odom_msg->twist.twist.linear.y;
+                twist_data_point[2] = input_odom_msg->twist.twist.linear.z;
                 twist_data_point[3] = 
-                                twist_data_point->twist.twist.angular.x;
+                                input_odom_msg->twist.twist.angular.x;
                 twist_data_point[4] = 
-                                twist_data_point->twist.twist.angular.y;
+                                input_odom_msg->twist.twist.angular.y;
                 twist_data_point[5] = 
-                                twist_data_point->twist.twist.angular.z;
+                                input_odom_msg->twist.twist.angular.z;
                 
                 twist_covar.insert(twist_data_point);
             }
@@ -129,8 +127,8 @@ class covar_ros
         //   return true;
         // }
 
-        bool setup(ros::NodeHandle& nh, std:string& input_odom, 
-                    std:string& output_odom)
+        bool setup(ros::NodeHandle& nh, std::string& input_odom, 
+                    std::string& output_odom)
         {
             sub_odom = nh.subscribe<nav_msgs::Odometry>(input_odom, 5, 
                             &covar_ros::input_odom_handler, 
@@ -138,9 +136,9 @@ class covar_ros
             
             pub_odom = nh.advertise<nav_msgs::Odometry>(output_odom, 5);
 
-            gen_pose_covar  = nh.advertiseService("gen_pose_covar", add);
-            gen_twist_covar = nh.advertiseService("gen_twist_covar", add);
-            gen_both_covar  = nh.advertiseService("gen_both_covar", add);
+            // gen_pose_covar  = nh.advertiseService("gen_pose_covar", add);
+            // gen_twist_covar = nh.advertiseService("gen_twist_covar", add);
+            // gen_both_covar  = nh.advertiseService("gen_both_covar", add);
 
             return true;
         }

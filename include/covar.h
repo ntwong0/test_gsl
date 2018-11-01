@@ -90,7 +90,7 @@ class covar
 
         void print_dp()
         {
-            for (auto i = 0; i < data_points->size(); i++)
+            for (int i = 0; i < data_points->size(); i++)
             {
                 printf("%i: %f %f %f %f %f %f\n",
                             i,
@@ -105,10 +105,10 @@ class covar
         
         void print_mat()
         {
-            for (auto i = 0; i < covar_mat->size1; i++)
+            for (int i = 0; i < covar_mat->size1; i++)
             {
                 printf("\n");
-                for (auto j = 0; j < covar_mat->size2; j++)
+                for (int j = 0; j < covar_mat->size2; j++)
                 {
                     printf("%f", covar_mat->data[covar_mat->size2*i+j]);
                     if(j < covar_mat->size2 - 1) printf(", ");
@@ -120,7 +120,7 @@ class covar
         // \TODO: if covar_mat not available, deny get_mat
         bool get_mat(double* array)
         {
-            for(auto i = 0; i < 36; i++)
+            for(int i = 0; i < 36; i++)
                 array[i] = gsl_matrix_get(covar_mat, 
                                           i/6,  //row
                                           i%6); //column

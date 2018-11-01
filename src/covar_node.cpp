@@ -1,5 +1,5 @@
 #include <ros/ros.h>
-#include "covar/covar_ros.h"
+#include "covar_ros.h"
 
 
 /** Main node entry point. */

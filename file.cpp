@@ -74,8 +74,11 @@ int main()
     //                       {6,6,6,6,6,6}};
     
     covar my_covar;
-    my_covar.insert(dataA[0]);
+    for (i = 0; i < rsize; i++)
+        my_covar.insert(dataA[i]);
     my_covar.print_dp();
+    my_covar.generate_covar();
+    my_covar.print_mat();
 
     // gsl_vector_view a, b;
 

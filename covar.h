@@ -1,10 +1,13 @@
-#ifndef COVAR_H
-#define COVAR_H
+#ifndef COVAR_H_
+#define COVAR_H_
 
 #include <stdio.h>
 #include <gsl/gsl_statistics_double.h>
 #include <gsl/gsl_matrix_double.h>
 #include <vector>
+
+// \TODO: trim excess comments 
+// \TODO: split this into an implementation file
 
 /*
  *  Okay, so here's what we need
@@ -27,10 +30,10 @@
  */
 
 // the covariance matrix of our odometry topic tracks six variables
+// as in, think of each data point as a six-dimensional point with the 
+// following axes: x, y, z, yaw, pitch, roll
 #define ODOM_COVAR_MAT_VARSIZE 6
 
-// Since we're traversing through the data points using a loop, maybe it'd 
-// be better to use an array of doubles rather than a struct
 // struct odom_struct
 // {
 //     double x;
@@ -40,6 +43,20 @@
 //     double pitch;
 //     double roll;
 // };
+
+// Since we're traversing through the data points using a loop, maybe it'd 
+// be better to use an array of doubles rather than a struct
+// double * data_point = new data_point[6];
+// We establish the convention here:
+// index: 0  1  2  3    4      5
+// axis:  x, y, z, yaw, pitch, roll
+
+// However, from a maintainability perspective, relying on a double 
+// pointer is bad - there is no way of guaranteeing the fixed six-element 
+// size that we want for data point
+// \TODO: create a better container (i.e. class) for each data point that 
+//        has as a member method 
+//        1) the square bracket operator, for fetching an element
 
 class covar
 {
@@ -143,4 +160,4 @@ class covar
         }
 };
 
-#endif // COVAR_H
+#endif // COVAR_H_

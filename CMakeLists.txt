@@ -63,6 +63,8 @@ add_service_files(
   gen_pose_covar_srv.srv
   gen_twist_covar_srv.srv
   gen_both_covar_srv.srv
+  set_input_odom_srv.srv
+  set_output_odom_srv.srv
 )
 
 ## Generate actions in the 'action' folder

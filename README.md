@@ -31,11 +31,11 @@ If you're using `covar` with `loam_velodyne`, you can run the following command:
 ## 4. Service calls - this is why you "bought" it 
 Generate the covariance matrix with the following:
 * For pose only, 100 samples
-    * `rosservice call /gen_pose_covar 100`
+    * `rosservice call /covar/gen_pose_covar 100`
 * For twist only, 100 samples
-    * `rosservice call /gen_twist_covar 100`
+    * `rosservice call /covar/gen_twist_covar 100`
 * For pose and twist, 100 samples pose and 200 samples twist
-    * `rosservice call /gen_both_covar 100 200`
+    * `rosservice call /covar/gen_both_covar 100 200`
 
 ## 5. Versioning
 * 0.1.0 (published 2018-11-01 via 6c56a64)
@@ -44,10 +44,14 @@ Generate the covariance matrix with the following:
     * [x] Generates covariances for pose and/or twist from the input std_msgs/Odometry topic
     * [x] Accepts rosservice calls to perform covariance generation
 * 0.2.0 (ETA 2018-11-30)
+    * [x] Parameters and services are now relative to the node's private name
     * [x] Provide `.launch` file for ease of execution via `roslaunch`
-    * [ ] `rosparam`-ify input and output topic
+    * [x] `rosparam`-ify input and output topic
+        * [x] At node start
+        * [x] Dynamically set via `rosservice call`
     * [ ] `rosparam`-ify covariance matrices for pose and twist
-    * [ ] `rosservice call` for changing covariance matrices on-the-fly
+        * [ ] At node start
+        * [ ] Dynamically set via `rosservice call`
 * 0.3.0 (ETA 2018-12-07)
     * [ ] Also generate covariance for accelerometer data
 

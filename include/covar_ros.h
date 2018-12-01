@@ -7,9 +7,11 @@
 #include <nav_msgs/Odometry.h>
 #include <tf/transform_broadcaster.h>
 
-#include <covar/gen_pose_covar_srv.h>
+#include "covar/gen_pose_covar_srv.h"
 #include "covar/gen_twist_covar_srv.h"
 #include "covar/gen_both_covar_srv.h"
+#include "covar/set_input_odom_srv.h"
+#include "covar/set_output_odom_srv.h"
 
 /* Continuing from covar.h, what we want to do here is
  * 1) Instantiate a covar object for each part of the odometry topic
@@ -26,6 +28,20 @@
  * 5) Publish an odometry topic, appending the covariance matrix
  */
 
+/* Working back from covar_node.cpp, in attempts of rosparam-ifying
+ * 1. input and output topics
+ * 2. pose and twist covariance matrices
+ *
+ * We need to
+ * 1. Get the param upon initialization
+ *    [x] topics
+ *    [ ] covariance matrices
+ * 2. Set up callbacks for rosservice calls
+ *    [ ] topics
+ *    [ ] covariance matrices
+ * 3. 
+ */
+
 class covar_ros
 {
     private:
@@ -38,20 +54,23 @@ class covar_ros
 
         // \TODO: refactor *_data_points_count and *_data_points_limit
         //        to *_samples_count and *_samples_limit
-        uint8_t pose_data_points_count;
-        uint8_t twist_data_points_count;
-        uint8_t pose_data_points_limit;
-        uint8_t twist_data_points_limit;
+        uint32_t pose_data_points_count;
+        uint32_t twist_data_points_count;
+        uint32_t pose_data_points_limit;
+        uint32_t twist_data_points_limit;
         bool pose_covar_available;
         bool twist_covar_available;
 
         nav_msgs::Odometry output_odom_msg;
+        ros::NodeHandle *nh_ptr;
 
         ros::Subscriber sub_odom;
         ros::Publisher pub_odom;
         ros::ServiceServer gen_pose_covar;
         ros::ServiceServer gen_twist_covar;
         ros::ServiceServer gen_both_covar;
+        ros::ServiceServer set_input_odom;
+        ros::ServiceServer set_output_odom;
     
     public:
         covar_ros()
@@ -198,10 +217,64 @@ class covar_ros
             return true;
         }
 
+        bool set_input_odom_cb(
+                                covar::set_input_odom_srv::Request &req,
+                                covar::set_input_odom_srv::Response &res)
+        {
+            // validate the input odom topic name against ROS name spec
+            // see: http://docs.ros.org/kinetic/api/roscpp/html/namespaceros_1_1names.html#a38652a4f7a805e9d63ab256fb47721be
+            std::string input_odom(req.input_odom);
+            std::string validate_error_return_msg;
+            
+            if (ros::names::validate(input_odom, validate_error_return_msg)) // if valid
+            {
+                sub_odom = nh_ptr->subscribe<nav_msgs::Odometry>(input_odom, 5, 
+                                &covar_ros::input_odom_handler, 
+                                this);
+                nh_ptr->setParam("input_odom", input_odom);
+                res.ack = 1;
+                return true;
+            }
+
+            else // get rekt
+            {
+                ROS_INFO(validate_error_return_msg.c_str());
+                res.ack = 0;
+                return false;
+            }
+        }
+
+        bool set_output_odom_cb(
+                                covar::set_output_odom_srv::Request &req,
+                                covar::set_output_odom_srv::Response &res)
+        {
+            // validate the input odom topic name against ROS name spec
+            // see: http://docs.ros.org/kinetic/api/roscpp/html/namespaceros_1_1names.html#a38652a4f7a805e9d63ab256fb47721be
+            std::string output_odom(req.output_odom);
+            std::string validate_error_return_msg;
+            
+            if (ros::names::validate(output_odom, validate_error_return_msg)) // if valid
+            {
+                pub_odom = nh_ptr->advertise<nav_msgs::Odometry>(output_odom, 5);
+                nh_ptr->setParam("output_odom", output_odom);
+                res.ack = 1;
+                return true;
+            }
+
+            else // get rekt
+            {
+                ROS_INFO(validate_error_return_msg.c_str());
+                res.ack = 0;
+                return false;
+            }
+        }
+
         // lol http://wiki.ros.org/roscpp_tutorials/Tutorials/UsingClassMethodsAsCallbacks
         bool setup(ros::NodeHandle& nh, std::string& input_odom, 
                     std::string& output_odom)
         {
+            nh_ptr = &nh;
+            
             pub_odom = nh.advertise<nav_msgs::Odometry>(output_odom, 5);
             
             sub_odom = nh.subscribe<nav_msgs::Odometry>(input_odom, 5, 
@@ -217,6 +290,19 @@ class covar_ros
             gen_both_covar  = nh.advertiseService("gen_both_covar", 
                                     &covar_ros::gen_both_covar_cb,
                                     this);
+
+            set_input_odom =  nh.advertiseService("set_input_odom", 
+                                    &covar_ros::set_input_odom_cb,
+                                    this);
+            set_output_odom =  nh.advertiseService("set_output_odom", 
+                                    &covar_ros::set_output_odom_cb,
+                                    this);
+            // set_pose_covar =  nh.advertiseService("set_pose_covar", 
+            //                         &covar_ros::set_pose_covar_cb,
+            //                         this);
+            // set_twist_covar =  nh.advertiseService("set_twist_covar", 
+            //                         &covar_ros::set_twist_covar_cb,
+            //                         this);
 
             return true;
         }

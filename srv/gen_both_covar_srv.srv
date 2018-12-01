@@ -1,4 +1,4 @@
-uint8 pose_sample_limit
-uint8 twist_sample_limit
+uint32 pose_sample_limit
+uint32 twist_sample_limit
 ---
 uint8 ack

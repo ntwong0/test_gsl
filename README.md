@@ -11,13 +11,22 @@ Do the following to add to the src of your ROS workspace (i.e. catkin_ws if you 
 catkin_make as usual:
 * `cd path/to/catkin_ws; catkin_make`
 
-**You already have the loam_velodyne package installed, right?**
-* Note that loam_velodyne uses the XZ plane rather than the XY plane, so you'll to translate the axes. The easiest way to do this is via the following static transform: `rosrun tf2_ros static_transform_publisher 0 0 0  0 0  1.5708 /world /camera_init`
+**Please note RE: the loam_velodyne package**
+* Although `covar` is a general `std_msgs/Odometry` republisher, it was built with [`loam_velodyne`](https://github.com/laboshinl/loam_velodyne.git) in mind.
+    * Note that its build instructions specifies the `-DCMAKE_BUILD_TYPE=Release` flag. Please obey this, otherwise your `loam_velodyne` node will not work!
+* Note that loam_velodyne uses the XZ plane rather than the XY plane, so you'll to translate the axes. The `covar` launch file `loam_velodyne_with_covar.launch` creates the two static transforms you need, but if you want to run them yourself: 
+    1. Tie `/camera_init` to `/world`: `rosrun tf2_ros static_transform_publisher 0 0 0  0 0  1.5708 /world /camera_init`
+    2. Tie `/map` to `/world` (assuming your map tf is `/map`): `rosrun tf2_ros static_transform_publisher 0 0 0  0 0 0 /world /map`
 
 ## 3. Running
-No launch file has yet been prepared, so use rosrun instead, and don't forget to source the setup.bash file:
+As always, be sure to `source` the appropriate `setup.bash` file, i.e.
 * `cd path/to/catkin_ws; source devel/setup.bash`
+
+You can run covar independently via `rosrun`:
 * `rosrun covar covar_node`
+
+If you're using `covar` with `loam_velodyne`, you can run the following command:
+* `roslaunch covar loam_velodyne_with_covar.launch`
 
 ## 4. Service calls - this is why you "bought" it 
 Generate the covariance matrix with the following:
@@ -30,17 +39,17 @@ Generate the covariance matrix with the following:
 
 ## 5. Versioning
 * 0.1.0 (published 2018-11-01 via 6c56a64)
-    * Republishes an input std_msgs/Odometry topic
-        * Excludes the covariance of the input's messages
-    * Generates covariances for pose and/or twist from the input std_msgs/Odometry topic
-    * Accepts rosservice calls to perform covariance generation
+    * [x] Republishes an input std_msgs/Odometry topic
+        * [x] Excludes the covariance of the input's messages
+    * [x] Generates covariances for pose and/or twist from the input std_msgs/Odometry topic
+    * [x] Accepts rosservice calls to perform covariance generation
 * 0.2.0 (ETA 2018-11-30)
-    * Provide `.launch` file for ease of execution via `roslaunch`
-    * `rosparam`-ify input and output topic
-    * `rosparam`-ify covariance matrices for pose and twist
-    * `rosservice call` for changing covariance matrices on-the-fly
+    * [x] Provide `.launch` file for ease of execution via `roslaunch`
+    * [ ] `rosparam`-ify input and output topic
+    * [ ] `rosparam`-ify covariance matrices for pose and twist
+    * [ ] `rosservice call` for changing covariance matrices on-the-fly
 * 0.3.0 (ETA 2018-12-07)
-    * Also generate covariance for accelerometer data
+    * [ ] Also generate covariance for accelerometer data
 
 ## 999. Dummy compilation note:
 To compile, do the following:

@@ -1,0 +1,11 @@
+<launch>
+    <node pkg="tf2_ros" type="static_transform_publisher" name="world_to_camera_init" 
+            args="0 0 0 0 0 1.5708 /world /camera_init" />
+
+    <node pkg="tf2_ros" type="static_transform_publisher" name="world_to_map" 
+            args="0 0 0 0 0 0 /world /map" />
+    
+    <node pkg="covar" type="covar_node" name="covar_node" />
+
+    <include file="$(find loam_velodyne)/launch/loam_velodyne.launch" />
+</launch>

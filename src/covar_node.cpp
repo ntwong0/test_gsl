@@ -10,9 +10,9 @@ int main(int argc, char **argv)
 
     covar_ros covar_ros_obj;
 
-    // specify topics
-    std::string input_odom = "/integrated_to_init";
-    std::string output_odom = "/loam_odom_with_covar";
+    // specify topics, get params
+    std::string input_odom = rospy.get_param("~input_odom", "/integrated_to_init");
+    std::string output_odom = rospy.get_param("~output_odom", "/loam_odom_with_covar");
 
     if (covar_ros_obj.setup(nh, input_odom, output_odom)) {
         // initialization successful

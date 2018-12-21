@@ -10,8 +10,12 @@
 #include "covar/gen_pose_covar_srv.h"
 #include "covar/gen_twist_covar_srv.h"
 #include "covar/gen_both_covar_srv.h"
+
 #include "covar/set_input_odom_srv.h"
 #include "covar/set_output_odom_srv.h"
+#include "covar/set_pose_covar_srv.h"
+#include "covar/set_twist_covar_srv.h"
+#include "covar/set_both_covar_srv.h"
 
 /* Continuing from covar.h, what we want to do here is
  * 1) Instantiate a covar object for each part of the odometry topic
@@ -37,16 +41,18 @@
  *    [x] topics
  *    [ ] covariance matrices
  * 2. Set up callbacks for rosservice calls
- *    [ ] topics
+ *    [x] topics
  *    [ ] covariance matrices
- * 3. 
+ * 3. Create the services
+ *    [x] topics
+ *    [ ] covariance matrices
  */
 
 class covar_ros
 {
     private:
-        covar_lol pose_covar;
-        covar_lol twist_covar;
+        covar_lol *pose_covar;
+        covar_lol *twist_covar;
         // ntwong0 - instead of rolling with our own double arrays, we'll
         //           use the arrays provided in nav_msgs::Odometry instead
         // double pose_covar_mat[36];
@@ -71,6 +77,9 @@ class covar_ros
         ros::ServiceServer gen_both_covar;
         ros::ServiceServer set_input_odom;
         ros::ServiceServer set_output_odom;
+        ros::ServiceServer set_pose_covar;
+        ros::ServiceServer set_twist_covar;
+        ros::ServiceServer set_both_covar;
     
     public:
         covar_ros()
@@ -88,6 +97,14 @@ class covar_ros
             twist_data_points_limit = 0;
             pose_covar_available    = false;
             twist_covar_available   = false;
+        }
+
+        ~covar_ros()
+        {
+            delete pose_covar;
+            pose_covar = 0;
+            delete twist_covar;
+            twist_covar = 0;
         }
 
         void input_odom_handler(
@@ -112,7 +129,7 @@ class covar_ros
                 pose_data_point[4] = pitch;
                 pose_data_point[5] = yaw;
                 
-                pose_covar.insert(pose_data_point);
+                pose_covar->insert(pose_data_point);
             }
 
             if(pose_data_points_count > pose_data_points_limit 
@@ -120,9 +137,9 @@ class covar_ros
             {
                 pose_data_points_count = 0;
                 pose_data_points_limit = 0;
-                pose_covar.generate_covar();
-                // pose_covar.get_mat(pose_covar_mat);
-                pose_covar.get_mat(&(output_odom_msg.pose.covariance));
+                pose_covar->generate_covar();
+                // pose_covar->get_mat(pose_covar_mat);
+                pose_covar->get_mat(&(output_odom_msg.pose.covariance));
                 pose_covar_available = true;
             }
 
@@ -139,7 +156,7 @@ class covar_ros
                 twist_data_point[5] = 
                                 input_odom_msg->twist.twist.angular.z;
                 
-                twist_covar.insert(twist_data_point);
+                twist_covar->insert(twist_data_point);
             }
 
             if(twist_data_points_count > twist_data_points_limit 
@@ -147,9 +164,9 @@ class covar_ros
             {
                 twist_data_points_count = 0;
                 twist_data_points_limit = 0;
-                twist_covar.generate_covar();
-                // twist_covar.get_mat(twist_covar_mat);
-                twist_covar.get_mat(&(output_odom_msg.twist.covariance));
+                twist_covar->generate_covar();
+                // twist_covar->get_mat(twist_covar_mat);
+                twist_covar->get_mat(&(output_odom_msg.twist.covariance));
                 twist_covar_available = true;
             }
 
@@ -269,14 +286,25 @@ class covar_ros
             }
         }
 
+        // bool set_pose_covar_cb(
+        //                         covar::set_pose_covar_srv::Request &req,
+        //                         covar::set_pose_covar_srv::Response &res)
+        // {
+
+        // }
+
         // lol http://wiki.ros.org/roscpp_tutorials/Tutorials/UsingClassMethodsAsCallbacks
         bool setup(ros::NodeHandle& nh, std::string& input_odom, 
-                    std::string& output_odom)
+                                        std::string& output_odom,
+                                        std::string& pose_covar,
+                                        std::string& twist_covar)
         {
             nh_ptr = &nh;
+
+            pose_covar  = new covar_lol;
+            twist_covar = new covar_lol;
             
             pub_odom = nh.advertise<nav_msgs::Odometry>(output_odom, 5);
-            
             sub_odom = nh.subscribe<nav_msgs::Odometry>(input_odom, 5, 
                             &covar_ros::input_odom_handler, 
                             this);
@@ -302,6 +330,9 @@ class covar_ros
             //                         this);
             // set_twist_covar =  nh.advertiseService("set_twist_covar", 
             //                         &covar_ros::set_twist_covar_cb,
+            //                         this);
+            // set_both_covar =  nh.advertiseService("set_both_covar", 
+            //                         &covar_ros::set_both_covar_cb,
             //                         this);
 
             return true;

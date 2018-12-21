@@ -22,7 +22,7 @@ int main(int argc, char **argv)
     nh.param<std::string>("pose_covar", pose_covar, "");
     nh.param<std::string>("twist_covar", twist_covar, "");
 
-    if (covar_ros_obj.setup(nh, input_odom, output_odom)) {
+    if (covar_ros_obj.setup(nh, input_odom, output_odom, pose_covar, twist_covar)) {
         // initialization successful
         ros::spin();
     }

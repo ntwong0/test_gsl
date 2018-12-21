@@ -5,7 +5,10 @@
     <node pkg="tf2_ros" type="static_transform_publisher" name="world_to_map" 
             args="0 0 0 0 0 0 /world /map" />
     
-    <node pkg="covar" type="covar_node" name="covar_node" />
+    <node pkg="covar" type="covar_node" name="covar_node">
+        <param name="input_odom" type="str" value="/integrated_to_init" />
+        <param name="output_odom" type="str" value="/loam_odom_with_covar" />
+    </node>
 
     <include file="$(find loam_velodyne)/launch/loam_velodyne.launch" />
 </launch>
